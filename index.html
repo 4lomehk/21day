@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>21日抗炎 — Hack v10.1</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+/* ── THEME VARIABLES ── */
+:root {
+  --bg-base: #e6ebf0; --panel-bg: #f4f7f9; --border-light: #cdd6dc; --border-dark: #8b9aa4;
+  --text-main: #2c353c; --slate: #546e7a; --brick: #8d6e63; --alert-red: #c62828;
+  --warn-gold: #b8860b; --green-ok: #2e7d32;
+  --danger-bg: repeating-linear-gradient(45deg, rgba(198,40,40,0.1), rgba(198,40,40,0.1) 8px, rgba(198,40,40,0.2) 8px, rgba(198,40,40,0.2) 16px);
+  --mono: 'JetBrains Mono','Courier New',monospace;
+  --sans: 'Noto Sans TC',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+}[data-theme="dark"] {
+  --bg-base: #121212; --panel-bg: #1e1e1e; --border-light: #333; --border-dark: #555;
+  --text-main: #e0e0e0; --slate: #78909c; --brick: #ff8a65; --alert-red: #ef5350;
+  --warn-gold: #ffca28; --green-ok: #66bb6a;
+  --danger-bg: repeating-linear-gradient(45deg, rgba(239,83,80,0.15), rgba(239,83,80,0.15) 8px, rgba(239,83,80,0.3) 8px, rgba(239,83,80,0.3) 16px);
+}
+
+html { scroll-behavior: smooth; scroll-padding-top: 130px; }
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg-base);color:var(--text-main);font-family:var(--sans);line-height:1.6;padding:20px;transition:background 0.3s, color 0.3s;}
+.container{max-width:1150px;margin:0 auto}
+
+/* ── HEADER & CONTROLS ── */
+.nav-wrapper { position: sticky; top: 0; z-index: 100; background: var(--bg-base); padding-bottom: 10px; margin-bottom: 25px; border-bottom: 2px solid var(--border-dark); transition:background 0.3s;}
+.controls { display:flex; justify-content:flex-end; gap:10px; padding-top:10px; margin-bottom:10px; }
+.btn-ctrl { background:var(--panel-bg); color:var(--text-main); border:1px solid var(--border-dark); padding:5px 12px; font-family:var(--mono); font-size:0.8rem; cursor:pointer; border-radius:4px; transition:0.2s;}
+.btn-ctrl:hover { background:var(--slate); color:#fff; }
+
+.hdr-main{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:16px; margin-bottom:15px;}
+.hdr-left h1{font-size:1.8rem;color:var(--text-main);margin-bottom:4px;letter-spacing:.5px}
+.hdr-sub{font-family:var(--mono);font-size:.75rem;color:var(--slate);text-transform:uppercase}
+.sys-status{font-family:var(--mono);font-size:.72rem;color:var(--slate);line-height:1.6;border-left:2px solid var(--border-light);padding-left:14px}
+
+/* ── SCROLL NAV ── */
+.scroll-nav{display:flex;gap:6px;overflow-x:auto;padding:5px 0;scrollbar-width:none;flex-wrap:nowrap;}
+.scroll-nav::-webkit-scrollbar{display:none}
+.snav{white-space:nowrap;font-family:var(--mono);font-size:.75rem;font-weight:bold;padding:6px 12px;border:1px solid var(--border-dark);color:var(--slate);text-decoration:none;transition:all .2s;background:var(--panel-bg);border-radius:4px;cursor:pointer;}
+.snav:hover,.snav.on{background:var(--slate);color:#fff;border-color:var(--slate)}
+
+/* ── CHAPTER ── */
+.ch{background:var(--panel-bg);border:1px solid var(--border-light);padding:0;margin-bottom:35px;box-shadow:0 3px 6px rgba(0,0,0,.03);position:relative;border-radius:6px;}
+.ch-body{padding:24px 24px 30px;}
+.ch-badge{position:absolute;top:-12px;left:20px;background:var(--bg-base);color:var(--slate);font-family:var(--mono);font-size:.8rem;font-weight:700;padding:2px 10px;border:1px solid var(--border-light);border-radius:4px;transition:background 0.3s;}
+h2{font-size:1.35rem;color:var(--text-main);margin-bottom:18px;border-bottom:1px solid var(--border-light);padding-bottom:8px}
+h3{font-size:1rem;color:var(--slate);margin:20px 0 10px;font-family:var(--mono);border-left:3px solid var(--slate);padding-left:8px;}
+.ch-footer{background:rgba(0,0,0,0.03);border-top:1px solid var(--border-light);padding:7px 14px;font-family:var(--mono);font-size:.68rem;color:var(--slate);text-transform:uppercase;border-radius:0 0 6px 6px;}
+
+/* ── ALERT BOXES & TOGGLES ── */
+.alert-box{background:rgba(184,134,11,0.1);border-left:4px solid var(--warn-gold);padding:14px;margin-bottom:18px;font-size:.9rem;}
+.critical-box{background:rgba(198,40,40,0.1);border-left:4px solid var(--alert-red);padding:14px;margin-bottom:18px;font-size:.9rem;}
+.insight-box{background:rgba(84,110,122,0.1);border-left:4px solid var(--slate);padding:14px;margin-bottom:18px;font-size:.9rem;}
+
+details.toggle-list { background:rgba(0,0,0,0.03); border:1px solid var(--border-light); border-radius:4px; padding:10px; margin-top:10px; }
+details.toggle-list summary { font-family:var(--mono); font-size:0.85rem; font-weight:bold; cursor:pointer; color:var(--slate); outline:none; }
+details.toggle-list ul { margin-top:8px; margin-left:20px; font-size:0.85rem; color:var(--text-main); line-height: 1.6; }
+
+/* ── GRIDS & CARDS ── */
+.g2{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:14px}
+.g3{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:14px}
+.g4{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:15px}
+.card{background:var(--bg-base);padding:14px;border:1px solid var(--border-light);border-radius:4px;}
+.card h4{color:var(--text-main);margin-bottom:6px;font-family:var(--mono);font-size:.9rem}
+.card p{font-size:.85rem;line-height:1.6}
+.card-red{border-top:4px solid var(--alert-red)}
+.card-slate{border-top:4px solid var(--slate)}
+.card-gold{border-top:4px solid var(--warn-gold)}
+.card-green{border-top:4px solid var(--green-ok)}
+
+/* ── TABLES ── */
+table{width:100%;border-collapse:collapse;font-size:.88rem;margin-bottom:14px;background:var(--bg-base);}
+th,td{padding:10px 12px;border:1px solid var(--border-light);text-align:left;vertical-align:top}
+th{color:var(--slate);font-family:var(--mono);font-weight:700;font-size:.8rem;background:rgba(0,0,0,0.02);}
+
+/* ── HORIZONTAL TIMELINE (V10.1 UI FIXED) ── */
+.hz-wrapper{width:100%;overflow-x:auto;background:var(--bg-base);border:1px solid var(--border-light);background-image:linear-gradient(var(--border-light) 1px,transparent 1px),linear-gradient(90deg,var(--border-light) 1px,transparent 1px);background-size:40px 40px;border-radius:4px;}
+.hz-inner{min-width:1080px;position:relative;padding:30px 20px 160px 20px}
+.hz-track{position:relative;width:100%;height:32px;margin-top:35px;display:flex}
+.hz-mk{position:absolute;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center}
+.hz-mk.top{bottom:calc(100% + 5px)}
+.hz-mk.bot{top:calc(100% + 5px)}
+.hz-t{font-family:var(--mono);color:var(--text-main);font-size:.7rem;font-weight:700}
+.bar-fast{width:28.57%;background:rgba(84,110,122,0.15);border:1px solid var(--slate);border-right:none;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:.65rem;color:var(--slate);font-weight:700;z-index:1;letter-spacing:1px;}
+.bar-eat{width:57.14%;background:var(--slate);position:relative;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:.65rem;color:#fff;font-weight:700;z-index:1;letter-spacing:1px;}
+.bar-eat::before, .bar-eat::after{content:'';position:absolute;left:0;border-left:6px solid transparent;border-right:6px solid transparent;transform:translateX(-50%);}
+.bar-eat::before{top:-6px;border-top:6px solid var(--slate);}
+.bar-eat::after{bottom:-6px;border-bottom:6px solid var(--slate);}
+.bar-danger{width:14.28%;position:relative;z-index:1;background:var(--danger-bg);border:1px solid var(--alert-red);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:.6rem;color:var(--alert-red);font-weight:900;}
+.hz-track::before{content:'';position:absolute;left:-10px;right:-10px;top:50%;height:1px;background:var(--border-dark);z-index:0}
+
+/* Timeline Cards Fixed */
+.tl-card { position:absolute; top:85px; background:var(--bg-base); border:1px solid var(--border-light); padding:12px; width:210px; border-radius:4px; box-shadow:0 2px 6px rgba(0,0,0,0.08); z-index:2; }
+.tl-card-title { font-family:var(--mono); font-size:0.8rem; font-weight:bold; color:var(--slate); margin-bottom:6px; }
+.tl-card-text { font-size:0.8rem; color:var(--text-main); line-height:1.5; margin-bottom:6px; }
+.tl-card-note { font-family:var(--mono); font-size:0.7rem; color:var(--brick); }
+
+/* ── IMAGE-BASED SHOPPING & SUPPLY CHAIN UI ── */
+.shop-cat-box { border-top: 3px solid var(--slate); padding-top: 10px; margin-bottom:15px; }
+.shop-cat-title { font-family:var(--mono); font-size:0.9rem; color:var(--text-main); font-weight:bold; margin-bottom:10px; display:flex; align-items:center; gap:6px; }
+.shop-item { display:flex; align-items:flex-start; margin-bottom:8px; font-size:0.85rem; cursor:pointer;}
+.shop-item input { margin-top:3px; margin-right:8px; accent-color:var(--slate); }
+.shop-item.done { text-decoration:line-through; opacity:0.5; }
+.shop-item-note { display:block; font-family:var(--mono); font-size:0.7rem; color:var(--brick); margin-top:2px; }
+.notion-tag { display:inline-block; font-family:var(--mono); font-size:0.65rem; color:#1565c0; background:#e3f2fd; padding:1px 4px; border-radius:2px; margin-left:4px; text-decoration:none !important;}
+
+.supply-chain-card { background:var(--bg-base); padding:15px; border:1px solid var(--border-light); border-radius:4px; }
+.supply-title { font-family:var(--mono); font-size:0.85rem; color:var(--slate); font-weight:bold; margin-bottom:10px; border-bottom:1px dashed var(--border-light); padding-bottom:5px;}
+.supply-list { list-style:none; padding:0; margin:0; }
+.supply-list li { font-size:0.85rem; margin-bottom:6px; padding-left:14px; position:relative; }
+.supply-list li::before { content:'→'; position:absolute; left:0; color:var(--brick); font-family:var(--mono); }
+
+.grade-card { background:var(--bg-base); border:1px solid var(--border-light); padding:15px; border-radius:4px;}
+.grade-title { font-family:var(--mono); font-size:1.5rem; font-weight:bold; margin-bottom:5px; }
+.grade-subtitle { font-weight:bold; font-size:0.85rem; margin-bottom:5px; display:block;}
+.grade-A { color:var(--green-ok); } .grade-B { color:var(--slate); } .grade-C { color:var(--warn-gold); } .grade-D { color:var(--alert-red); }
+
+/* ── TRACKER ── */
+.tracker-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:14px}
+.day-box{background:var(--bg-base);border:1px solid var(--border-dark);height:50px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:var(--mono);font-size:.8rem;color:var(--slate);cursor:pointer;transition:0.2s;border-radius:4px;}
+.day-box:hover{border-color:var(--slate);}
+.day-box.done{background:var(--brick);color:#fff;border-color:var(--brick);font-weight:700}
+.prog-wrap{width:100%;height:6px;background:var(--border-light);margin-top:12px;border-radius:3px;overflow:hidden}
+.prog-bar{height:100%;background:var(--slate);width:0%;transition:width .3s}
+
+/* ── LANG TOGGLE LOGIC ── */
+.lang-en { display: none; }
+body.en-mode .lang-zh { display: none; }
+body.en-mode .lang-en { display: inline; }
+body.en-mode .lang-en-block { display: block; }
+</style>
+</head>
+<body>
+
+<div class="nav-wrapper">
+  <div class="container" style="padding-bottom:0;">
+    <!-- CONTROLS -->
+    <div class="controls">
+      <button class="btn-ctrl" id="themeToggle">🌙 <span class="lang-zh">暗/光</span><span class="lang-en">Dark/Light</span></button>
+      <button class="btn-ctrl" id="langToggle">🌐 繁 / ENG</button>
+    </div>
+    <!-- HEADER -->
+    <div class="hdr-main">
+      <div class="hdr-left">
+        <h1>
+          <span class="lang-zh">21日抗炎演算法</span>
+          <span class="lang-en">21-Day Anti-Inflammation Algorithm</span>
+        </h1>
+        <div class="hdr-sub">BIO-HACKER INDUSTRIAL: STEP-BY-STEP EDITION // V10.1</div>
+      </div>
+      <div class="sys-status">
+        SYSTEM STATUS: <span style="color:var(--alert-red);font-weight:bold;">CRITICAL</span> //<br>
+        AUTOIMMUNE_ERR // PURINE_OVERLOAD //<br>
+        NOTION_SYNC: <span style="color:var(--green-ok);font-weight:bold;">ACTIVE ✓</span>
+      </div>
+    </div>
+    <!-- SCROLL NAV -->
+    <nav class="scroll-nav">
+      <a href="#ch01" class="snav on"><span class="lang-zh">CH_01 症狀 Debug</span><span class="lang-en">CH_01 Debug</span></a>
+      <a href="#ch02" class="snav"><span class="lang-zh">CH_02 破釜心法</span><span class="lang-en">CH_02 Mindset</span></a>
+      <a href="#ch03" class="snav"><span class="lang-zh">CH_03 生命數據</span><span class="lang-en">CH_03 Biomarkers</span></a>
+      <a href="#ch04" class="snav"><span class="lang-zh">CH_04 焦土防火牆</span><span class="lang-en">CH_04 Firewall</span></a>
+      <a href="#ch05" class="snav"><span class="lang-zh">CH_05 購物清單</span><span class="lang-en">CH_05 Shopping</span></a>
+      <a href="#ch06" class="snav"><span class="lang-zh">CH_06 16:8 時間表</span><span class="lang-en">CH_06 16:8 Timeline</span></a>
+      <a href="#ch07" class="snav"><span class="lang-zh">CH_07 Phase 1 停損</span><span class="lang-en">CH_07 Phase 1</span></a>
+      <a href="#ch08" class="snav"><span class="lang-zh">CH_08 Phase 2 重啟</span><span class="lang-en">CH_08 Phase 2</span></a>
+      <a href="#ch09" class="snav"><span class="lang-zh">CH_09 Phase 3 鎖死</span><span class="lang-en">CH_09 Phase 3</span></a>
+      <a href="#ch10" class="snav"><span class="lang-zh">CH_10 硬件補丁</span><span class="lang-en">CH_10 Patches</span></a>
+      <a href="#ch11" class="snav"><span class="lang-zh">CH_11 痛風特攻</span><span class="lang-en">CH_11 Purine Fix</span></a>
+      <a href="#ch12" class="snav"><span class="lang-zh">CH_12 腫瘤 Hard Mode</span><span class="lang-en">CH_12 Tumor Protocol</span></a>
+      <a href="#ch13" class="snav"><span class="lang-zh">CH_13 24H 原型</span><span class="lang-en">CH_13 24H Prototype</span></a>
+      <a href="#ch14" class="snav"><span class="lang-zh">CH_14 21日追蹤</span><span class="lang-en">CH_14 Tracker</span></a>
+    </nav>
+  </div>
+</div>
+
+<div class="container">
+
+<!-- 🟢 階段一：認知與覺醒 -->
+
+<!-- CH_01: 症狀 Debug -->
+<div class="ch" id="ch01">
+  <div class="ch-badge" style="color:var(--alert-red);border-color:var(--alert-red);">CH_01</div>
+  <div class="ch-body">
+    <h2>
+      <span class="lang-zh">症狀掃描：系統崩潰前兆 (Debug Signals)</span>
+      <span class="lang-en">Symptom Scan: Pre-Crash Signals</span>
+    </h2>
+    <div class="insight-box">
+      <span class="lang-zh"><strong>核心邏輯：</strong> 身體內部免疫系統 bug。當腸道屏障受損（腸漏），毒素入血，引發全身慢性發炎。目標：<strong>修復系統漏洞，唔係掩蓋症狀</strong>。</span>
+      <span class="lang-en"><strong>Core Logic:</strong> Internal immune system bug. Leaky gut lets toxins into the blood, causing chronic inflammation. Goal: <strong>Fix system vulnerabilities, not mask symptoms</strong>.</span>
+    </div>
+    <div class="g3">
+      <div class="card card-red">
+        <h4><span class="lang-zh">[ERR_01] 腳後跟劇痛</span><span class="lang-en">[ERR_01] Heel Pain</span></h4>
+        <p><span class="lang-zh">寒濕體質（底盤滲漏）。體內爐火熄滅，水分沉積腳底，強烈發炎訊號。</span><span class="lang-en">Cold-damp physique. Internal fire extinguished, fluid accumulates in feet. Strong inflammation signal.</span></p>
+      </div>
+      <div class="card card-red">
+        <h4><span class="lang-zh">[ERR_02] 三陰交凹陷不回彈</span><span class="lang-en">[ERR_02] Leg Pitting Edema</span></h4>
+        <p><span class="lang-zh">脾胃「抽濕機」損壞。系統水腫，按壓出現「麵粉團感」。</span><span class="lang-en">Spleen/Stomach "dehumidifier" broken. Systemic edema, dough-like feeling when pressed.</span></p>
+      </div>
+      <div class="card card-red">
+        <h4><span class="lang-zh">[ERR_03] 莫明關節痛 / 晨僵</span><span class="lang-en">[ERR_03] Morning Stiffness</span></h4>
+        <p><span class="lang-zh">細胞因子積聚攻擊滑膜。朝早關節僵硬 >30分鐘，代表免疫系統徹夜錯誤攻擊自身。</span><span class="lang-en">Cytokines attacking synovium. Morning stiffness >30 mins means immune system attacked joints overnight.</span></p>
+      </div>
+      <div class="card card-red">
+        <h4><span class="lang-zh">[ERR_04] "Cappuccino" 尿泡</span><span class="lang-en">[ERR_04] "Cappuccino" Urine</span></h4>
+        <p><span class="lang-zh">尿泡 >1 分鐘唔散，腎臟過濾器壓力爆燈，蛋白嚴重流失。</span><span class="lang-en">Foam not dissipating >1 min. Kidney filter overwhelmed, severe protein loss.</span></p>
+      </div>
+      <div class="card card-red">
+        <h4><span class="lang-zh">[ERR_05] 腳趾罅生水泡</span><span class="lang-en">[ERR_05] Toe Blisters</span></h4>
+        <p><span class="lang-zh">濕熱毒素無處釋放，被迫於身體末端皮膚強行突破。</span><span class="lang-en">Damp-heat toxins have nowhere to go, forcing breakouts on extremities.</span></p>
+      </div>
+      <div class="card card-red">
+        <h4><span class="lang-zh">[ERR_06] 持續疲勞與脷苔</span><span class="lang-en">[ERR_06] Fatigue & Tongue</span></h4>
+        <p><span class="lang-zh">粒線體受損。每日觀察舌苔：</span><span class="lang-en">Mitochondria damaged. Daily tongue check:</span></p>
+        <details class="toggle-list">
+          <summary><span class="lang-zh">舌苔每日儀表板 (點擊展開)</span><span class="lang-en">Daily Tongue Dashboard</span></summary>
+          <ul>
+            <li><strong style="color:var(--warn-gold);"><span class="lang-zh">厚膩黃：</span><span class="lang-en">Thick Yellow: </span></strong><span class="lang-zh">濕熱沼澤。需加強 ACV。</span><span class="lang-en">Damp-heat. Increase ACV.</span></li>
+            <li><strong style="color:var(--slate);"><span class="lang-zh">厚膩白：</span><span class="lang-en">Thick White: </span></strong><span class="lang-zh">脾胃寒濕。需加乾薑，走凍飲。</span><span class="lang-en">Cold-damp. Add ginger, no cold drinks.</span></li>
+            <li><strong style="color:var(--green-ok);"><span class="lang-zh">淡紅薄白：</span><span class="lang-en">Thin White: </span></strong><span class="lang-zh">正常 ✅ 進入固本期。</span><span class="lang-en">Normal ✅ Enter consolidation phase.</span></li>
+          </ul>
+        </details>
+      </div>
+    </div>
+  </div>
+  <div class="ch-footer">PHASE 1: AWARENESS // DEBUG_CHECK</div>
+</div>
+
+<!-- CH_02: 破釜心法 -->
+<div class="ch" id="ch02">
+  <div class="ch-badge slate">CH_02</div>
+  <div class="ch-body">
+    <h2><span class="lang-zh">破釜沉舟心法 (Execution Reality)</span><span class="lang-en">Execution Mindset</span></h2>
+    <div class="critical-box">
+      <span class="lang-zh"><strong>⚠️ 破戒的代價：</strong> 一開始食得太清會好悶。每日最好有「一餐」跟足指引。但如果你食一餐麥當勞，<strong>等於成個星期白做</strong>。Zero Tolerance。</span>
+      <span class="lang-en"><strong>⚠️ Cost of Cheating:</strong> Eating clean is boring at first. Try one compliant meal a day to start. But if you eat McDonald's once, <strong>you waste the entire week's effort</strong>. Zero Tolerance.</span>
+    </div>
+    <h3><span class="lang-zh">// 排毒必經「衰退期」</span><span class="lang-en">// The Inevitable "Detox Dip"</span></h3>
+    <p><span class="lang-zh">身體好誠實。當你減少毒素，身體會代謝出變化，你會經歷：</span><span class="lang-en">The body is honest. Reducing toxins causes metabolic shifts, leading to:</span></p>
+    <ul style="margin-left:20px; font-size:0.9rem; line-height:1.8;">
+      <li><span class="lang-zh">排毒次數與顏色改變（大便變深色）。</span><span class="lang-en">Changes in detox frequency and color (darker stools).</span></li>
+      <li><span class="lang-zh">精神起伏、糖癮戒斷引致偏頭痛（第 2-4 日最強烈）。</span><span class="lang-en">Mood swings, sugar withdrawal migraines (peaks Day 2-4).</span></li>
+      <li><span class="lang-zh">甚至<strong>飆冷汗</strong>。呢啲係衰退期變差 → 反覆 → 改善嘅必經之路。</span><span class="lang-en">Even <strong>cold sweats</strong>. This is the normal path: worsen → fluctuate → improve.</span></li>
+    </ul>
+  </div>
+  <div class="ch-footer">PHASE 1: AWARENESS // MINDSET_PREP</div>
+</div>
+
+<!-- CH_03: 生命數據 -->
+<div class="ch" id="ch03">
+  <div class="ch-badge">CH_03</div>
+  <div class="ch-body">
+    <h2><span class="lang-zh">生命數據對比矩陣 (Biomarker Targets)</span><span class="lang-en">Biomarker Target Matrix</span></h2>
+    <p style="font-size:0.9rem; margin-bottom:15px;"><span class="lang-zh">唔好滿足於化驗所嘅「正常範圍」（嗰個係 NPC 未死得嘅標準），生存者要追求的是 <strong>Optimal Range（最佳化）</strong>。</span><span class="lang-en">Don't settle for lab "normal ranges" (NPC standards). Survivors seek the <strong>Optimal Range</strong>.</span></p>
+    <table>
+      <tr>
+        <th><span class="lang-zh">指標</span><span class="lang-en">Biomarker</span></th>
+        <th><span class="lang-zh">NPC 狀態</span><span class="lang-en">NPC State</span></th>
+        <th><span class="lang-zh">Sigma 目標</span><span class="lang-en">Sigma Target</span></th>
+        <th><span class="lang-zh">臨床意義</span><span class="lang-en">Clinical Significance</span></th>
+      </tr>
+      <tr>
+        <td><strong><span class="lang-zh">維他命 D3</span><span class="lang-en">Vitamin D3</span></strong></td>
+        <td style="color:var(--alert-red)">&lt; 30 ng/mL</td>
+        <td style="color:var(--green-ok)">50–80 ng/mL</td>
+        <td><span class="lang-zh">免疫系統嘅盾牌。低於 30 代表自體免疫容易暴走。</span><span class="lang-en">Immune shield. &lt;30 means autoimmune risk.</span></td>
+      </tr>
+      <tr>
+        <td><strong><span class="lang-zh">血清尿酸</span><span class="lang-en">Uric Acid</span></strong></td>
+        <td style="color:var(--alert-red)">&gt; 7.0 mg/dL</td>
+        <td style="color:var(--green-ok)"><span class="lang-zh">男 &lt;5.5 / 女 &lt;4.4</span><span class="lang-en">M &lt;5.5 / F &lt;4.4</span></td>
+        <td><span class="lang-zh">唔只係痛風，係全身細胞氧化壓力、果糖中毒嘅代理指標。</span><span class="lang-en">Proxy for systemic oxidative stress and fructose toxicity.</span></td>
+      </tr>
+      <tr>
+        <td><strong>Omega 6:3</strong></td>
+        <td style="color:var(--alert-red)">20:1</td>
+        <td style="color:var(--green-ok)"><span class="lang-zh">接近</span><span class="lang-en">Close to</span> 3.6:1</td>
+        <td><span class="lang-zh">細胞膜流動性。比例越失衡，身體越容易發炎。</span><span class="lang-en">Cell membrane fluidity. High ratio = high inflammation.</span></td>
+      </tr>
+      <tr>
+        <td><strong><span class="lang-zh">空腹血糖</span><span class="lang-en">Fasting Glucose</span></strong></td>
+        <td style="color:var(--alert-red)">&gt; 100 mg/dL</td>
+        <td style="color:var(--green-ok)">70–85 mg/dL</td>
+        <td><span class="lang-zh">胰島素阻抗前兆。維持低水平代表代謝靈活性高。</span><span class="lang-en">Insulin resistance warning. Low level = metabolic flexibility.</span></td>
+      </tr>
+    </table>
+  </div>
+  <div class="ch-footer">PHASE 1: AWARENESS // SET_TARGETS</div>
+</div>
+
+<!-- 🟡 階段二：戰略與準備 -->
+
+<!-- CH_04: 焦土防火牆 -->
+<div class="ch" id="ch04">
+  <div class="ch-badge" style="color:var(--alert-red);border-color:var(--alert-red);">CH_04</div>
+  <div class="ch-body">
+    <h2><span class="lang-zh">焦土行動：防火牆警戒 (Firewall Blocklist)</span><span class="lang-en">Firewall Blocklist</span></h2>
+    <div class="g2">
+      <div class="card card-red">
+        <h4><span class="lang-zh">[ERR_SUGAR] 精製糖 / 代糖</span><span class="lang-en">[ERR_SUGAR] Refined & Artificial Sugar</span></h4>
+        <details class="toggle-list" open>
+          <summary><span class="lang-zh">食物標籤隱藏代碼 (點擊展開)</span><span class="lang-en">Hidden Label Codes (Expand)</span></summary>
+          <ul>
+            <li><span class="lang-zh">麥芽糊精</span><span class="lang-en">Maltodextrin</span>, <span class="lang-zh">高果糖玉米糖漿</span><span class="lang-en">HFCS</span></li>
+            <li><span class="lang-zh">化學代糖：蔗糖素、阿斯巴甜</span><span class="lang-en">Sucralose, Aspartame</span></li>
+            <li><span class="lang-zh">化學代碼：</span><span class="lang-en">Codes: </span><strong>E951, E955, E621(MSG), E211</strong></li>
+          </ul>
+        </details>
+      </div>
+      <div class="card card-red">
+        <h4><span class="lang-zh">[ERR_SEED_OIL] 工業種子油</span><span class="lang-en">[ERR_SEED_OIL] Industrial Seed Oils</span></h4>
+        <p><span class="lang-zh">葵花籽油、大豆油、菜籽油、植物奶。Omega-6 極高，黏附血管嘅化學膠水。</span><span class="lang-en">Sunflower, soy, canola, plant milks. High Omega-6 vascular glue.</span></p>
+      </div>
+      <div class="card card-red">
+        <h4><span class="lang-zh">[ERR_GLUTEN] 麩質 (Gluten)</span><span class="lang-en">[ERR_GLUTEN] Gluten</span></h4>
+        <p><span class="lang-zh">撕裂腸道屏障（tight junction），導致「腸漏症」，毒素入血。</span><span class="lang-en">Tears tight junctions, causing leaky gut and toxin leakage.</span></p>
+      </div>
+      <div class="card card-red">
+        <h4><span class="lang-zh">[ERR_UPF] 毒素廚具與微塑膠</span><span class="lang-en">[ERR_UPF] Toxic Cookware & Plastics</span></h4>
+        <p><span class="lang-zh">鐵氟龍鑊釋放 PFAS；外賣膠盒釋放微塑膠干擾荷爾蒙。</span><span class="lang-en">Teflon releases PFAS; plastic containers release endocrine disruptors.</span></p>
+      </div>
+    </div>
+  </div>
+  <div class="ch-footer">PHASE 2: PREPARATION // BLOCK_TOXINS</div>
+</div>
+
+<!-- CH_05: 購物清單 (Image Matched UI) -->
+<div class="ch" id="ch05">
+  <div class="ch-badge">CH_05</div>
+  <div class="ch-body">
+    <h2><span class="lang-zh">焦土行動 — 購物清單 & 香港供應鏈</span><span class="lang-en">Shopping List & Supply Chain</span></h2>
+    <div class="alert-box" style="background:rgba(184,134,11,0.15);">
+      <span class="lang-zh">認住 <strong>100% Grass-finished</strong> 而非普通 Grass-fed（後者最後 90-120 日仍被餵穀物，Omega-6 飆升）。皮膚更替週期 21 天，堅持執行先見效。Click 打剔確認已買。</span>
+      <span class="lang-en">Look for <strong>100% Grass-finished</strong>, not just Grass-fed (which grain-finishes, spiking Omega-6). Skin turnover is 21 days. Click to check off.</span>
+    </div>
+
+    <!-- 8 Categories matching image -->
+    <div class="g4" style="margin-bottom:30px;">
+      
+      <!-- Col 1 -->
+      <div class="shop-cat-box">
+        <div class="shop-cat-title">🥩 <span class="lang-zh">核心蛋白質</span><span class="lang-en">Core Proteins</span></div>
+        <label class="shop-item"><input type="checkbox" value="p1"><span><span class="lang-zh">100% Grass-finished 牛肉</span><span class="lang-en">100% Grass-finished Beef</span><span class="shop-item-note">// 西營盤高街 55+57 號</span></span></label>
+        <label class="shop-item"><input type="checkbox" value="p2"><span><span class="lang-zh">伊比利亞豬肉</span><span class="lang-en">Iberico Pork</span><span class="shop-item-note">// 量力而為</span></span></label>
+        <label class="shop-item"><input type="checkbox" value="p3"><span><span class="lang-zh">大西洋鯖魚 (整條 200g)</span><span class="lang-en">Atlantic Mackerel (200g)</span><span class="shop-item-note">// Omega-3 密度最高</span></span></label>
+        <label class="shop-item"><input type="checkbox" value="p4"><span><span class="lang-zh">沙甸魚 (罐/玻璃樽, 橄欖油浸)</span><span class="lang-en">Sardines (Glass jar/can in olive oil)</span><span class="shop-item-note">// 唔要種子油</span></span></label>
+        <label class="shop-item"><input type="checkbox" value="p5"><span><span class="lang-zh">新鮮魚 (如紅衫)</span><span class="lang-en">Fresh Fish (e.g. Golden Threadfin)</span><span class="shop-item-note">// 留意細骨</span></span></label>
+        <label class="shop-item"><input type="checkbox" value="p6"><span><span class="lang-zh">走地雞蛋 / 有機走地雞</span><span class="lang-en">Free-range eggs/chicken</span></span></label>
+      </div>
+
+      <!-- Col 2 -->
+      <div class="shop-cat-box">
+        <div class="shop-cat-title">🥑 <span class="lang-zh">優質油脂</span><span class="lang-en">Premium Fats</span></div>
+        <label class="shop-item"><input type="checkbox" value="f1"><span><span class="lang-zh">初榨橄欖油 EVOO/VOO</span><span class="lang-en">EVOO/VOO</span><span class="shop-item-note">// 黃金熄火彈必備 / 可煮</span></span></label>
+        <label class="shop-item"><input type="checkbox" value="f2"><span><span class="lang-zh">草飼牛油 Ghee</span><span class="lang-en">Grass-fed Ghee</span><span class="shop-item-note">// 替代種子油</span></span></label>
+        <label class="shop-item"><input type="checkbox" value="f3"><span><span class="lang-zh">牛脂 Tallow</span><span class="lang-en">Tallow</span></span></label>
+        <label class="shop-item"><input type="checkbox" value="f4"><span><span class="lang-zh">白兵花生油</span><span class="lang-en">Approved Peanut Oil</span><span class="notion-tag">Notion ✓</span></span></label>
+        <label class="shop-item"><input type="checkbox" value="f5"><span><span class="lang-zh">椰子油 (初榨)</span><span class="lang-en">Virgin Coconut Oil</span></span></label>
+        <label class="shop-item"><input type="checkbox" value="f6"><span><span class="lang-zh">C8 MCT Oil</span><span class="lang-en">C8 MCT Oil</span><span class="shop-item-note">// 抗炎咖啡用</span></span></label>
+      </div>
+
+      <!-- Col 3 -->
+      <div class="shop-cat-box">
+        <div class="shop-cat-title">🧪 <span class="lang-zh">發酵食品</span><span class="lang-en">Fermented Foods</span></div>
+        <label class="shop-item"><input type="checkbox" value="fe1"><span><span class="lang-zh">納豆 (冷凍裝)</span><span class="lang-en">Natto (Frozen)</span><span class="shop-item-note">// 週一/三/五主食</span></span></label>
+        <label class="shop-item"><input type="checkbox" value="fe2"><span><span class="lang-zh">泡菜 (無糖版 / DIY)</span><span class="lang-en">Kimchi (Sugar-free/DIY)</span><span class="shop-item-note">// 週二/四/六主食</span></span></label>
+        <label class="shop-item"><input type="checkbox" value="fe3"><span><span class="lang-zh">蘋果醋 ACV (帶醋母)</span><span class="lang-en">ACV (With Mother)</span></span></label>
+        <label class="shop-item"><input type="checkbox" value="fe4"><span><span class="lang-zh">無糖原味乳酪</span><span class="lang-en">Plain Yogurt (No Sugar)</span></span></label>
+      </div>
+
+      <!-- Col 4 -->
+      <div class="shop-cat-box">
+        <div class="shop-cat-title">🌿 <span class="lang-zh">香料 & 必需品</span><span class="lang-en">Spices & Essentials</span></div>
+        <label class="shop-item"><input type="checkbox" value="s1"><span><span class="lang-zh">原條連皮生薑黃 (新鮮)</span><span class="lang-en">Fresh Turmeric Root</span><span class="shop-item-note">// 或白兵 LGBT蜜</span></span></label>
+        <label class="shop-item"><input type="checkbox" value="s2"><span><span class="lang-zh">原粒黑椒 (唔係粉末)</span><span class="lang-en">Black Peppercorns</span><span class="shop-item-note">// 8-10 粒配薑黃</span></span></label>
+        <label class="shop-item"><input type="checkbox" value="s3"><span><span class="lang-zh">錫蘭肉桂粉 Ceylon</span><span class="lang-en">Ceylon Cinnamon</span><span class="shop-item-note">// 唔係 Cassia</span></span></label>
+        <label class="shop-item"><input type="checkbox" value="s4"><span><span class="lang-zh">生可可粉 Raw Cacao</span><span class="lang-en">Raw Cacao Powder</span></span></label>
+        <label class="shop-item"><input type="checkbox" value="s5"><span><span class="lang-zh">巴西堅果</span><span class="lang-en">Brazil Nuts</span><span class="shop-item-note">// 每日 2 粒 = 200mcg 硒</span></span></label>
+        <label class="shop-item"><input type="checkbox" value="s6"><span><span class="lang-zh">有機真蜂蜜 (原裝, 34°C 以下)</span><span class="lang-en">Raw Organic Honey</span></span></label>
+        <label class="shop-item"><input type="checkbox" value="s7"><span><span class="lang-zh">白兵豉油</span><span class="lang-en">Approved Soy Sauce</span></span></label>
+      </div>
+
+      <!-- Col 5 -->
+      <div class="shop-cat-box">
+        <div class="shop-cat-title">🛡️ <span class="lang-zh">白兵認證產品</span><span class="lang-en">Certified Products</span></div>
+        <label class="shop-item"><input type="checkbox" value="w1"><span><span class="lang-zh">白兵 LGBT蜜</span><span class="lang-en">LGBT Honey</span><span class="notion-tag">Notion ✓</span><span class="shop-item-note">// 黃金熄火彈 2.0 專用</span></span></label>
+        <label class="shop-item"><input type="checkbox" value="w2"><span><span class="lang-zh">白兵修理脾 (湯包)</span><span class="lang-en">Spleen Repair Soup</span><span class="notion-tag">Notion ✓</span><span class="shop-item-note">// 輔助食療</span></span></label>
+        <label class="shop-item"><input type="checkbox" value="w3"><span><span class="lang-zh">白兵高硒茶</span><span class="lang-en">High Selenium Tea</span><span class="notion-tag">Notion ✓</span></span></label>
+        <label class="shop-item"><input type="checkbox" value="w4"><span><span class="lang-zh">維他命 D 湯包 (20K-40K++)</span><span class="lang-en">Vit D Soup (20K+)</span></span></label>
+        <label class="shop-item"><input type="checkbox" value="w5"><span><span class="lang-zh">鋅-蠔湯</span><span class="lang-en">Zinc Oyster Soup</span></span></label>
+      </div>
+
+      <!-- Col 6 -->
+      <div class="shop-cat-box">
+        <div class="shop-cat-title">🌱 <span class="lang-zh">中藥材</span><span class="lang-en">TCM Herbs</span></div>
+        <label class="shop-item"><input type="checkbox" value="t1"><span><span class="lang-zh">乾薑 / 陳皮 / 白茯苓</span><span class="lang-en">Dried Ginger/Peel/Poria</span><span class="shop-item-note">// 還魂湯 2.0</span></span></label>
+        <label class="shop-item"><input type="checkbox" value="t2"><span><span class="lang-zh">炙乾草 / 麥冬 / 黃芪</span><span class="lang-en">Licorice/Ophiopogon/Astragalus</span></span></label>
+        <label class="shop-item"><input type="checkbox" value="t3"><span><span class="lang-zh">桑葚乾 / 桂圓</span><span class="lang-en">Mulberry/Longan</span><span class="shop-item-note">// 補腎縮尿</span></span></label>
+        <label class="shop-item"><input type="checkbox" value="t4"><span><span class="lang-zh">食用級乳香 (阿曼/B. serrata)</span><span class="lang-en">Frankincense (Edible)</span><span class="shop-item-note">// 上環文咸西街</span></span></label>
+      </div>
+
+      <!-- Col 7 -->
+      <div class="shop-cat-box">
+        <div class="shop-cat-title">💊 <span class="lang-zh">補充劑</span><span class="lang-en">Supplements</span></div>
+        <label class="shop-item"><input type="checkbox" value="su1"><span><span class="lang-zh">D3 + K2 MK-7 複合補充劑</span><span class="lang-en">D3 + K2 MK-7</span></span></label>
+        <label class="shop-item"><input type="checkbox" value="su2"><span><span class="lang-zh">甘氨酸鎂 Mg Glycinate</span><span class="lang-en">Magnesium Glycinate</span></span></label>
+        <label class="shop-item"><input type="checkbox" value="su3"><span><span class="lang-zh">鋅補充劑 (含銅 1-2mg)</span><span class="lang-en">Zinc (with Copper)</span></span></label>
+        <label class="shop-item"><input type="checkbox" value="su4"><span><span class="lang-zh">薑黃素 (含黑椒 Piperine)</span><span class="lang-en">Curcumin (with Piperine)</span></span></label>
+      </div>
+
+      <!-- Col 8 -->
+      <div class="shop-cat-box">
+        <div class="shop-cat-title">🔧 <span class="lang-zh">修復工具</span><span class="lang-en">Repair Tools</span></div>
+        <label class="shop-item"><input type="checkbox" value="r1"><span><span class="lang-zh">防藍光眼鏡 (21:00 後)</span><span class="lang-en">Blue-light Glasses</span></span></label>
+        <label class="shop-item"><input type="checkbox" value="r2"><span><span class="lang-zh">鑄鐵鑊 (代替鐵氟龍)</span><span class="lang-en">Cast Iron Skillet</span></span></label>
+        <label class="shop-item"><input type="checkbox" value="r3"><span><span class="lang-zh">無氟牙膏 (保護松果體)</span><span class="lang-en">Fluoride-free Toothpaste</span></span></label>
+        <label class="shop-item"><input type="checkbox" value="r4"><span><span class="lang-zh">法式濾壓壺 (French Press)</span><span class="lang-en">French Press</span><span class="shop-item-note">// 保留咖啡護肝油層</span></span></label>
+        <label class="shop-item"><input type="checkbox" value="r5"><span><span class="lang-zh">浸腳用具 (溫水泡腳)</span><span class="lang-en">Foot Soak Basin</span></span></label>
+      </div>
+    </div>
+
+    <!-- Supply Chain section based on Image -->
+    <h3 style="margin-top:10px;"><span class="lang-zh">// 香港 MAGA 認證供應鏈</span><span class="lang-en">// Certified Supply Chain</span></h3>
+    <div class="g4" style="margin-bottom:20px;">
+      <div class="supply-chain-card">
+        <div class="supply-title">🏪 <span class="lang-zh">西營盤高街 55+57 號</span><span class="lang-en">High Street, Sai Ying Pun</span></div>
+        <ul class="supply-list">
+          <li><span class="lang-zh">One Stop Food Supply + Little Pinch</span><span class="lang-en">One Stop Food Supply + Little Pinch</span></li>
+          <li><span class="lang-zh">100% Grass-finished 澳洲有機牛、阿根廷冠軍牛</span><span class="lang-en">100% Grass-finished Beef</span></li>
+          <li><span class="lang-zh">大西洋鯖魚、野生細魚、急凍沙甸魚及葡萄牙罐頭橄欖油沙甸魚</span><span class="lang-en">Atlantic Mackerel, Wild Small Fish, Frozen & Portuguese Canned Olive Oil Sardines</span></li>
+          <li><span class="lang-zh">優質牛脂</span><span class="lang-en">Premium Tallow</span></li>
+        </ul>
+      </div>
+      <div class="supply-chain-card">
+        <div class="supply-title">🏪 <span class="lang-zh">觀塘/線上白兵地堡</span><span class="lang-en">Online Bunker</span></div>
+        <ul class="supply-list">
+          <li><span class="lang-zh">白兵 LGBT蜜（黃金熄火彈載體）</span><span class="lang-en">LGBT Honey</span></li>
+          <li><span class="lang-zh">白兵高硒茶</span><span class="lang-en">High Selenium Tea</span></li>
+          <li><span class="lang-zh">維他命 D3 湯包、益生菌</span><span class="lang-en">Vit D3 Soup, Probiotics</span></li>
+          <li><span class="lang-zh">鋅-蠔湯</span><span class="lang-en">Zinc Oyster Soup</span></li>
+        </ul>
+      </div>
+      <div class="supply-chain-card">
+        <div class="supply-title">🏪 <span class="lang-zh">上環文咸西街</span><span class="lang-en">Bonham Strand West</span></div>
+        <ul class="supply-list">
+          <li><span class="lang-zh">源興（參茸藥材街）</span><span class="lang-en">Yuen Hing (Herb St)</span></li>
+          <li><span class="lang-zh">食用級阿曼皇家綠乳香樹脂</span><span class="lang-en">Edible Green Frankincense</span></li>
+          <li><span class="lang-zh">乾薑、陳皮、白茯苓原材</span><span class="lang-en">Dried Ginger, Poria</span></li>
+          <li><span class="lang-zh">麥冬、黃芪、桑葚乾</span><span class="lang-en">Ophiopogon, Astragalus, Mulberry</span></li>
+        </ul>
+      </div>
+      <div class="supply-chain-card">
+        <div class="supply-title">☕ <span class="lang-zh">精品 Roastery</span><span class="lang-en">Specialty Roastery</span></div>
+        <ul class="supply-list">
+          <li><span class="lang-zh">@normallyclosed_（咖啡豆）供應商（小量無聊查詢，飲開 starfuck 勿攪 9 人）</span><span class="lang-en">@normallyclosed_ (Beans supplier: no idle queries, starbucks drinkers don't bother)</span></li>
+          <li><span class="lang-zh">極淺焙 Nordic Roast 埃塞俄比亞豆</span><span class="lang-en">Nordic Roast Beans</span></li>
+          <li><span class="lang-zh">法式濾壓必備：保留 Cafestol & Kahweol 護肝油層</span><span class="lang-en">Preserves liver-protecting oils</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Food Grades based on Image -->
+    <h3 style="margin-top:10px;"><span class="lang-zh">// MAGA 食物加工等級標籤法</span><span class="lang-en">// MAGA Food Grades</span></h3>
+    <div class="g4">
+      <div class="grade-card">
+        <div class="grade-title grade-A">Grade A</div>
+        <span class="grade-subtitle"><span class="lang-zh">Real Foods / Raw Foods</span><span class="lang-en">Real / Raw Foods</span></span>
+        <p style="font-size:0.8rem;"><span class="lang-zh">原形全食、產地直送。100% 草飼牛肉、冷榨豬油、野生魚、淺焙咖啡豆。細胞膜嘅原材料。</span><span class="lang-en">Whole foods, direct origin. 100% grass-fed beef, wild fish. Cell membrane materials.</span></p>
+      </div>
+      <div class="grade-card">
+        <div class="grade-title grade-B">Grade B</div>
+        <span class="grade-subtitle"><span class="lang-zh">Simply Processed</span><span class="lang-en">Simply Processed</span></span>
+        <p style="font-size:0.8rem;"><span class="lang-zh">廚房見得到嘅加工。冷壓油、天然發酵泡菜、自製骨頭湯。仍然可接受。</span><span class="lang-en">Kitchen-level processing. Cold-pressed oils, natural kimchi, bone broth. Acceptable.</span></p>
+      </div>
+      <div class="grade-card">
+        <div class="grade-title grade-C">Grade C</div>
+        <span class="grade-subtitle"><span class="lang-zh">Processed</span><span class="lang-en">Processed</span></span>
+        <p style="font-size:0.8rem;"><span class="lang-zh">有添加物但成分表清晰。如商業乳酪、普通橄欖油。謹慎選擇。</span><span class="lang-en">Added ingredients but clear labels. Commercial yogurt. Choose carefully.</span></p>
+      </div>
+      <div class="grade-card">
+        <div class="grade-title grade-D">Grade D</div>
+        <span class="grade-subtitle"><span class="lang-zh">Ultra-Processed (UPF)</span><span class="lang-en">Ultra-Processed (UPF)</span></span>
+        <p style="font-size:0.8rem;"><span class="lang-zh">含種子油、HFCS、化學乳化劑。即食麵、零食、超市醬料。系統病毒，直接 Delete。</span><span class="lang-en">Seed oils, HFCS, emulsifiers. Instant noodles, snacks. System viruses. Delete.</span></p>
+      </div>
+    </div>
+  </div>
+  <div class="ch-footer">PHASE 2: PREPARATION // GEAR_UP</div>
+</div>
+
+<!-- 🔵 階段三：每日戰術執行 -->
+
+<!-- CH_06: 16:8 時間表 (V10.1 UI FIXED) -->
+<div class="ch" id="ch06">
+  <div class="ch-badge slate">CH_06</div>
+  <div class="ch-body">
+    <h2><span class="lang-zh">16:8 間歇性斷食 — 24H 戰術時間表</span><span class="lang-en">16:8 Intermittent Fasting — 24H Tactical Timeline</span></h2>
+    
+    <div class="alert-box" style="background:#fff3cd; border-color:var(--warn-gold);">
+      <span class="lang-zh"><strong>懶人 7 日包 (脾胃虛弱版)：</strong> 5 杯飲品一次過分裝，每日開水沖（40°C，嚴格控制水溫，唔係滾水）。全部零奶、零糖、零冰。雪櫃保存 OK，但濕重人士忌凍飲。</span>
+      <span class="lang-en"><strong>Lazy 7-Day Pack (Weak Spleen):</strong> Prep 5 drinks at once, mix with water daily (strictly 40°C, not boiling). Zero milk, sugar, ice. Fridge OK, but heavy-damp types avoid cold drinks.</span>
+    </div>
+
+    <!-- Timeline Wrapper matching image -->
+    <div class="hz-wrapper">
+      <div class="hz-inner">
+        <!-- Top markers -->
+        <div class="hz-mk top" style="left:0%"><span class="hz-t">08:00</span></div>
+        <div class="hz-mk top" style="left:14.28%"><span class="hz-t" style="margin-top:20px">10:00</span></div>
+        <div class="hz-mk top" style="left:35.71%"><span class="hz-t">13:00</span></div>
+        <div class="hz-mk top" style="left:57.14%"><span class="hz-t">16:00</span></div>
+        <div class="hz-mk top" style="left:85.71%"><span class="hz-t" style="margin-top:20px">20:00</span></div>
+        <div class="hz-mk top" style="left:100%"><span class="hz-t">22:00</span></div>
+
+        <!-- Track -->
+        <div class="hz-track">
+          <div class="bar-fast">FASTING PHASE // REPAIR MODE</div>
+          <div class="bar-eat">EATING WINDOW // 12:00-20:00</div>
+          <div class="bar-danger">⚠ DANGER ZONE</div>
+        </div>
+
+        <!-- Bottom markers -->
+        <div class="hz-mk bot" style="left:0%"><span class="hz-t">08:00</span></div>
+        <div class="hz-mk bot" style="left:28.57%"><span class="hz-t">12:00</span></div>
+        <div class="hz-mk bot" style="left:57.14%"><span class="hz-t">16:00</span></div>
+        <div class="hz-mk bot" style="left:100%"><span class="hz-t">22:00</span></div>
+
+        <!-- Cards positioned below track (matching image layout) -->
+        <div class="tl-card" style="left:0%;">
+          <div class="tl-card-title"><span class="lang-zh">[08:00] 起床</span><span class="lang-en">[08:00] Wake Up</span></div>
+          <div class="tl-card-text">
+            <span class="lang-zh">300ml 暖水 (40°C) + 1茶匙 ACV + 薑片 (暖胃助陽)</span>
+            <span class="lang-en">300ml warm water (40°C) + 1tsp ACV + Ginger (Warm stomach)</span>
+          </div>
+          <div class="tl-card-note"><span class="lang-zh">// 黃金熄火彈 2.0 空腹執行</span><span class="lang-en">// Golden Fire Bomb 2.0 Fasted</span></div>
+        </div>
+
+        <div class="tl-card" style="left:28.57%;">
+          <div class="tl-card-title"><span class="lang-zh">[12:00-13:00] 開餐 + 補丁</span><span class="lang-en">[12:00-13:00] Meal + Patches</span></div>
+          <div class="tl-card-text">
+            <span class="lang-zh">餐後服 : D3, K2, Zinc, Mg</span>
+            <span class="lang-en">Post-meal: D3, K2, Zinc, Mg</span>
+          </div>
+          <div class="tl-card-note"><span class="lang-zh">// 脂溶性，必須跟餐</span><span class="lang-en">// Fat-soluble, must take with food</span></div>
+        </div>
+
+        <div class="tl-card" style="left:57.14%;">
+          <div class="tl-card-title"><span class="lang-zh">[16:00] 下午補丁</span><span class="lang-en">[16:00] Afternoon Patches</span></div>
+          <div class="tl-card-text">
+            <span class="lang-zh">2粒巴西堅果 + 白兵高硒茶</span>
+            <span class="lang-en">2 Brazil nuts + High Selenium Tea</span>
+          </div>
+          <div class="tl-card-note">
+            <span class="lang-zh">// Selenium 200mcg 天然來源</span><span class="lang-en">// Natural Selenium 200mcg</span><br>
+            <span class="notion-tag">Notion ✓</span>
+          </div>
+        </div>
+
+        <div class="tl-card" style="left:85.71%; transform: translateX(-40%);">
+          <div class="tl-card-title"><span class="lang-zh">[21:00-22:00] 數位斷食</span><span class="lang-en">[21:00-22:00] Digital Fast</span></div>
+          <div class="tl-card-text">
+            <span class="lang-zh">飛航模式 + 溫水浸腳<br>溫水浸腳 20 分鐘</span>
+            <span class="lang-en">Airplane mode + Foot soak<br>Warm foot soak 20 mins</span>
+          </div>
+          <div class="tl-card-note"><span class="lang-zh">// 褪黑素保護 + 助眠</span><span class="lang-en">// Melatonin protection + Sleep</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Golden Fire Bomb Table matching image -->
+    <h3 style="margin-top:25px; border-left:3px solid var(--brick); padding-left:8px;">
+      <span class="lang-zh">// 黃金熄火彈 2.0 - 每日 08:00 空腹執行</span>
+      <span class="lang-en">// Golden Fire Bomb 2.0 - Daily 08:00 Fasted</span>
+    </h3>
+    <table style="background:var(--bg-base); border:1px solid var(--border-light);">
+      <tr>
+        <th width="15%" style="background:rgba(0,0,0,0.02); color:var(--slate);"><span class="lang-zh">材料</span><span class="lang-en">Ingredients</span></th>
+        <td><span class="lang-zh">原條<strong>連皮生薑黃</strong>切碎粒（保留活酵素，唔好磨粉）+ <strong>8-10 粒原粒黑椒</strong> + <strong>1 湯匙 EVOO</strong> + 300ml 暖水 (40°C)</span><span class="lang-en">Raw turmeric (with skin, diced) + 8-10 black peppercorns + 1 tbsp EVOO + 300ml warm water (40°C)</span></td>
+      </tr>
+      <tr>
+        <th style="background:rgba(0,0,0,0.02); color:var(--slate);"><span class="lang-zh">腫瘤人士</span><span class="lang-en">Tumor Protocol</span></th>
+        <td><span class="lang-zh">必須加入<strong>半個蘋果份量</strong>嚟調節生物利用率</span><span class="lang-en">Must add <strong>half an apple portion</strong> to regulate bioavailability</span></td>
+      </tr>
+      <tr>
+        <th style="background:rgba(0,0,0,0.02); color:var(--slate);"><span class="lang-zh">核心科學</span><span class="lang-en">Core Science</span></th>
+        <td><span class="lang-zh">黑椒入面嘅 Piperine 令薑黃素吸收率提升 <strong style="color:var(--alert-red)">2000%</strong>。EVOO 係脂溶性載體。唔加黑椒 = 等於白飲。 <span class="notion-tag">Notion: 薑黃 Turmeric ✓</span></span><span class="lang-en">Piperine boosts curcumin absorption by <strong style="color:var(--alert-red)">2000%</strong>. EVOO is fat-soluble carrier. No pepper = useless.</span></td>
+      </tr>
+      <tr>
+        <th style="background:rgba(0,0,0,0.02); color:var(--slate);"><span class="lang-zh">指令</span><span class="lang-en">Command</span></th>
+        <td><span class="lang-zh">空腹飲落，喺系統未被雜訊干擾前，直接將抗炎指令寫入細胞膜。</span><span class="lang-en">Drink fasted. Write anti-inflammatory code directly to cell membranes before system noise.</span></td>
+      </tr>
+    </table>
+  </div>
+  <div class="ch-footer">PHASE 3: EXECUTION // MASTER_TIMELINE</div>
+</div>
+
+<!-- CH_07: Phase 1 停損 -->
+<div class="ch" id="ch07">
+  <div class="ch-badge" style="color:var(--alert-red);border-color:var(--alert-red);">CH_07</div>
+  <div class="ch-body">
+    <h2><span class="lang-zh">Phase 1 (Day 1-7): 系統 Format 停損</span><span class="lang-en">Phase 1: Format & Stop Loss</span></h2>
+    <div class="g2">
+      <div class="card card-red">
+        <h4><span class="lang-zh">🎯 階段目標</span><span class="lang-en">🎯 Goal</span></h4>
+        <p><span class="lang-zh">熄滅發炎火種，強制戒糖。忍受糖癮戒斷、頭痛與疲勞加劇。</span><span class="lang-en">Extinguish inflammation, forced sugar detox. Endure withdrawal headaches.</span></p>
+      </div>
+      <div class="card card-red">
+        <h4><span class="lang-zh">🍽️ 核心餐單 (非單一飲食)</span><span class="lang-en">🍽️ Core Menu</span></h4>
+        <p><span class="lang-zh"><strong>重點精髓：REAL FOOD 真正原材食物</strong> 為主要食用。相反調味要非常留意 MAGA 食物加工等級標籤法 Grade A & B（最好盡量）。<br><br><strong>主菜：</strong> 香茅肉碎、茄汁南瓜蓉焗豬扒配小量飯。草飼牛 / 伊比利亞豬肉（量力而為）。<br><strong>調味防線：</strong> 盡量小化學劑。准用白兵花生油、豬油、EVOO（可煮）、白兵豉油。絕對謝絕糖。</span><span class="lang-en"><strong>Key Essence: REAL FOOD</strong> as main diet. Pay close attention to seasoning, strictly follow MAGA Food Grades A & B as much as possible.<br><br><strong>Mains:</strong> Lemongrass minced pork, Tomato pumpkin pork chop + small rice. Grass-fed beef/Iberico pork. Minimize chemicals. Allowed: Lard, PB oil, EVOO, soy sauce. NO SUGAR.</span></p>
+      </div>
+      <div class="card card-red">
+        <h4><span class="lang-zh">☕ 核心飲品</span><span class="lang-en">☕ Core Drinks</span></h4>
+        <p><span class="lang-zh"><strong>杯1 (暖薑檸檬水) + 杯2 (薑黃暖水)。</strong><br>每日空腹執行，水溫 40°C，排寒濕最強指令。</span><span class="lang-en"><strong>Cup 1 (Lemon Ginger) + Cup 2 (Turmeric).</strong> Empty stomach, 40°C. Strongest damp-cold expulsion.</span></p>
+      </div>
+    </div>
+  </div>
+  <div class="ch-footer">PHASE 3: EXECUTION // DAY_01_TO_07</div>
+</div>
+
+<!-- CH_08: Phase 2 重啟 -->
+<div class="ch" id="ch08">
+  <div class="ch-badge" style="color:var(--warn-gold);border-color:var(--warn-gold);">CH_08</div>
+  <div class="ch-body">
+    <h2><span class="lang-zh">Phase 2 (Day 8-14): 脾胃 Restart 重啟</span><span class="lang-en">Phase 2: Restart Spleen/Stomach</span></h2>
+    <div class="g2">
+      <div class="card card-gold">
+        <h4><span class="lang-zh">🎯 階段目標</span><span class="lang-en">🎯 Goal</span></h4>
+        <p><span class="lang-zh">打 Omega 戰爭。腦霧消散、水腫退去、精神開始穩定。</span><span class="lang-en">Omega war. Brain fog clears, edema subsides, stable energy.</span></p>
+      </div>
+      <div class="card card-gold">
+        <h4><span class="lang-zh">🍽️ 核心餐單 (深海軍火庫)</span><span class="lang-en">🍽️ Core Menu (Deep Sea Arsenal)</span></h4>
+        <p><span class="lang-zh"><strong>重點精髓：REAL FOOD 真正原材食物</strong> 為主要食用。調味要非常留意 MAGA 食物加工等級標籤法 Grade A & B。<br><br><strong>深海軍火庫：</strong>鹽焗鯖魚、急凍沙甸魚、新鮮魚（如紅衫，留意超多細骨）、罐頭沙甸配椰菜花蓉 + 酸種麵包（小份量）。重建脾胃電池。</span><span class="lang-en"><strong>Key Essence: REAL FOOD</strong> as main diet. Follow MAGA Food Grades A & B for seasoning.<br><br><strong>Arsenal:</strong> Salt-baked mackerel, frozen sardines, fresh fish (mind bones), canned sardines + cauliflower mash + sourdough (small portion).</span></p>
+      </div>
+      <div class="card card-gold">
+        <h4><span class="lang-zh">☕ 核心飲品</span><span class="lang-en">☕ Core Drinks</span></h4>
+        <p><span class="lang-zh"><strong>杯3 (奇亞籽茴香茶) + 杯4 (冷萃 Cacao)。</strong><br>飯後去脹氣，下午醒腦不傷胃。</span><span class="lang-en"><strong>Cup 3 (Chia Fennel) + Cup 4 (Cacao).</strong> Anti-bloating and brain fuel.</span></p>
+      </div>
+      <div class="card card-gold">
+        <h4><span class="lang-zh">🌿 痛風 / 嘌呤特攻 (必做)</span><span class="lang-en">🌿 Purine Fix (Crucial)</span></h4>
+        <p><span class="lang-zh">因腎功能減弱排不走雜質（化學週期表）：<br><strong>芫茜連根 + 唐西芹（非水耕）</strong>一齊蒸。</span><span class="lang-en">For kidney filtration support: Steam coriander with root + Chinese celery (non-hydroponic).</span></p>
+      </div>
+    </div>
+  </div>
+  <div class="ch-footer">PHASE 3: EXECUTION // DAY_08_TO_14</div>
+</div>
+
+<!-- CH_09: Phase 3 鎖死 -->
+<div class="ch" id="ch09">
+  <div class="ch-badge" style="color:var(--green-ok);border-color:var(--green-ok);">CH_09</div>
+  <div class="ch-body">
+    <h2><span class="lang-zh">Phase 3 (Day 15-21): 固本 Lock 鎖死</span><span class="lang-en">Phase 3: Lock Down</span></h2>
+    <div class="g2">
+      <div class="card card-green">
+        <h4><span class="lang-zh">🎯 階段目標</span><span class="lang-en">🎯 Goal</span></h4>
+        <p><span class="lang-zh">能量鎖定與微生態成型。獲得 Sigma 氣場，燃脂全開。</span><span class="lang-en">Energy lockdown, microbiome shaping. Sigma aura, full fat-burn.</span></p>
+      </div>
+      <div class="card card-green">
+        <h4><span class="lang-zh">🍽️ 核心餐單與補丁</span><span class="lang-en">🍽️ Core Menu & Patches</span></h4>
+        <p><span class="lang-zh"><strong>重點精髓：REAL FOOD 真正原材食物</strong> 為主要食用。調味要非常留意 MAGA 食物加工等級標籤法 Grade A & B（最好盡量）。<br><br><strong>食療湯水：</strong>白兵修理脾（芡實/茯苓/淮山/蓮子）。<em>*絕對不是正餐。</em><br>極寒魚類（鱈魚肝）必須配合肉桂/乾薑陽化。</span><span class="lang-en"><strong>Key Essence: REAL FOOD</strong> as main diet. Follow MAGA Food Grades A & B.<br><br><strong>Therapeutic Soup:</strong> Spleen Repair Soup (*NOT a meal). Extreme cold fish (Cod liver) must be balanced with cinnamon/ginger.</span></p>
+      </div>
+      <div class="card card-green">
+        <h4><span class="lang-zh">☕ 核心飲品</span><span class="lang-en">☕ Core Drinks</span></h4>
+        <p><span class="lang-zh"><strong>杯5 (暖 ACV) + 杯6 (丁香焗水)。</strong><br>睡前降至 40°C 飲丁香水，減腸道炎症。</span><span class="lang-en"><strong>Cup 5 (Warm ACV) + Cup 6 (Clove Water).</strong> Pre-bed clove water (40°C) reduces gut inflammation.</span></p>
+      </div>
+      <div class="card card-green">
+        <h4><span class="lang-zh">🛡️ 物理鎖定</span><span class="lang-en">🛡️ Physical Locks</span></h4>
+        <p><span class="lang-zh"><strong>深蹲 (Squats) 300 次</strong>（可分段）。斷水流。每日曬陽池穴 + 赤腳接地。</span><span class="lang-en"><strong>300 Squats</strong> (can break into sets). Water cutoff. Daily sun exposure + barefoot grounding.</span></p>
+      </div>
+    </div>
+  </div>
+  <div class="ch-footer">PHASE 3: EXECUTION // DAY_15_TO_21</div>
+</div>
+
+<!-- 🟣 階段四：進階與重症外掛 -->
+
+<!-- CH_10: 硬件補丁 -->
+<div class="ch" id="ch10">
+  <div class="ch-badge slate">CH_10</div>
+  <div class="ch-body">
+    <h2><span class="lang-zh">硬件驅動補丁 (Advanced Supplements)</span><span class="lang-en">Hardware Patches</span></h2>
+    <table>
+      <tr>
+        <th width="20%"><span class="lang-zh">維他命 D3</span><span class="lang-en">Vit D3</span></th>
+        <td><strong style="color:var(--alert-red)">5K - 10K - 40K <span class="lang-zh">及更高</span><span class="lang-en">or higher</span> IU</strong><br><span class="lang-zh">（推薦：20K-40K++ IU 維他命D3 湯包，SGS認證）。⚠️ 必須配合<strong>曬太陽</strong>及 <strong>維他命 K2</strong> (泡菜/納豆) 同服。</span><span class="lang-en">(Rec: 20K-40K++ D3 Soup, SGS verified). ⚠️ MUST take with <strong>sunlight</strong> and <strong>Vitamin K2</strong> (Kimchi/Natto).</span></td>
+      </tr>
+      <tr>
+        <th><span class="lang-zh">鋅 (Zn)</span><span class="lang-en">Zinc</span></th>
+        <td><strong style="color:var(--brick)">15 - 90 mg</strong>。 <span class="lang-zh">維持礦物平衡，修復腸漏。</span><span class="lang-en">Maintain mineral balance, fix leaky gut.</span></td>
+      </tr>
+      <tr>
+        <th><span class="lang-zh">硒元素 (Se)</span><span class="lang-en">Selenium</span></th>
+        <td><span class="lang-zh">高硒綠茶所含究極級元素分量及SGS認證，或每日 2 粒巴西堅果。</span><span class="lang-en">High-selenium green tea (SGS verified levels) or 2 Brazil nuts daily.</span></td>
+      </tr>
+    </table>
+
+    <div class="card card-slate" style="margin-top:15px;">
+      <h4><span class="lang-zh">薑黃素動態劑量協議 (Curcumin Protocol)</span><span class="lang-en">Dynamic Curcumin Protocol</span></h4>
+      <p style="font-size:0.85rem; margin-bottom:8px;"><span class="lang-zh">基礎：<strong style="color:var(--alert-red)">1,000 - 4,000 mg</strong>，必須搭配原粒黑胡椒 + 脂溶 <strong>15mg EVOO/豬油</strong>。</span><span class="lang-en">Base: 1,000 - 4,000 mg, MUST pair with black pepper + 15mg EVOO/Lard.</span></p>
+      <div style="background:rgba(0,0,0,0.03); padding:10px; border-left:3px solid var(--brick); font-family:var(--mono); font-size:0.8rem;">
+        <strong><span class="lang-zh">抽血指數動態調整法：</span><span class="lang-en">Dynamic Adjustment via Blood Tests:</span></strong><br>
+        <span class="lang-zh">最初由高峰期高劑量，直到每次抽血後癌指數回落後，減少（份量不能參考）。如回升可加份量，時間長達 6-9 個月不等。</span><span class="lang-en">Start high. Decrease dose only when cancer markers drop. If they rise, increase dose. Lasts 6-9 months.</span><br><br>
+        <strong>[<span class="lang-zh">範例 A: LGBT產品</span><span class="lang-en">Example A: LGBT Product</span>]</strong><br>
+        <span class="lang-zh">指數沒減少：加多至每餐 2茶匙 (3餐=6茶匙)</span><span class="lang-en">Markers stable: 2 tsp/meal (6 tsp/day)</span> <br>
+        <span class="lang-zh">➔ 指數回落：減至每餐 1茶匙 (3餐=3茶匙)</span><span class="lang-en">➔ Drops: 1 tsp/meal (3 tsp/day)</span> <br>
+        <span class="lang-zh">➔ 再回落：早+午 (2餐=2茶匙)</span><span class="lang-en">➔ Drops again: Breakfast/Lunch only (2 tsp/day)</span><br><br>
+        <strong>[<span class="lang-zh">範例 B: 生薑黃</span><span class="lang-en">Example B: Raw Turmeric</span>]</strong><br>
+        <span class="lang-zh">每餐 2條薑黃 (3餐=6條) ➔ 減至每餐 1條 (3餐=3條)。</span><span class="lang-en">2 roots/meal (6 roots/day) ➔ Reduce to 1 root/meal (3 roots/day).</span>
+      </div>
+    </div>
+  </div>
+  <div class="ch-footer">PHASE 4: ADVANCED // SGS_VERIFIED // DYNAMIC_DOSAGE</div>
+</div>
+
+<!-- CH_11: 痛風特攻 -->
+<div class="ch" id="ch11">
+  <div class="ch-badge slate">CH_11</div>
+  <div class="ch-body">
+    <h2><span class="lang-zh">痛風/普林高與極寒特攻 (TCM & Purine Fix)</span><span class="lang-en">Purine & Cold Constitution Fix</span></h2>
+    <div class="g2">
+      <div class="card card-slate">
+        <h4><span class="lang-zh">芫茜西芹排毒 (必做)</span><span class="lang-en">Coriander & Celery Detox</span></h4>
+        <p><span class="lang-zh">針對因腎功能減弱不能過濾排走雜質。<strong>芫茜連根 + 唐西芹（非水耕）一齊蒸</strong>。飯後必加<strong>藍莓（紫紅果肉）或 紅石榴打汁 30-50ml</strong>。</span><span class="lang-en">For weak kidneys unable to filter impurities. <strong>Steam coriander (with roots) + Chinese celery (non-hydroponic).</strong> After meals, drink 30-50ml Blueberry or Pomegranate juice.</span></p>
+      </div>
+      <div class="card card-slate">
+        <h4><span class="lang-zh">陰寒體質專用 Build</span><span class="lang-en">Cold Constitution Build</span></h4>
+        <p><span class="lang-zh">伏苓15粒 + 黃芪15塊 + 麥冬5-7粒 + 杞子 + 白術 + 果皮。<br><strong>肉桂禁忌：</strong> 絕對不可一齊煲！只能後放焗水，引火歸元。</span><span class="lang-en">Poria, Astragalus, Ophiopogon, Goji, Atractylodes, Peel.<br><strong>Cinnamon Taboo:</strong> Never boil together! Steep afterwards to draw fire to source.</span></p>
+      </div>
+    </div>
+  </div>
+  <div class="ch-footer">PHASE 4: ADVANCED // PURINE_PROTOCOL</div>
+</div>
+
+<!-- CH_12: 腫瘤 Hard Mode -->
+<div class="ch" id="ch12">
+  <div class="ch-badge" style="color:var(--alert-red);border-color:var(--alert-red);">CH_12</div>
+  <div class="ch-body">
+    <h2><span class="lang-zh">腫瘤 Hard Mode — 7 大必做清單</span><span class="lang-en">Tumor Hard Mode: Top 7 Checklist</span></h2>
+    <div class="critical-box"><strong>⚠️ <span class="lang-zh">外科手術警告：</span><span class="lang-en">Surgery Warning:</span></strong> <span class="lang-zh">薑黃可能延緩血液凝固，外科手術或損傷後兩星期暫停使用。</span><span class="lang-en">Turmeric may slow blood clotting. Stop 2 weeks before/after surgery.</span></div>
+    <div class="g3">
+      <div class="card card-red"><h4>1. <span class="lang-zh">覆診姿態</span><span class="lang-en">Proactive Consults</span></h4><p><span class="lang-zh">主動問醫生血液 pH Value。監控 pH 平衡。</span><span class="lang-en">Ask doctors for blood pH values. Monitor pH balance.</span></p></div>
+      <div class="card card-red"><h4>2. <span class="lang-zh">飲食自律</span><span class="lang-en">Dietary Discipline</span></h4><p><span class="lang-zh">戒絕精製糖，餓死癌細胞。</span><span class="lang-en">Zero refined sugar to starve cancer cells.</span></p></div>
+      <div class="card card-red"><h4>3. <span class="lang-zh">代謝重啟</span><span class="lang-en">Metabolic Reboot</span></h4><p><span class="lang-zh">168/231 斷食，誘發細胞自噬。</span><span class="lang-en">168/231 Fasting triggers autophagy.</span></p></div>
+      <div class="card card-red"><h4>4. <span class="lang-zh">免疫補給線</span><span class="lang-en">Immune Supply Line</span></h4><p><span class="lang-zh">Vit C / D3 / K2 / <strong>硒 / 鋅 / 鎂</strong> 協同作戰。</span><span class="lang-en">Vit C / D3 / K2 / <strong>Se / Zn / Mg</strong> synergy.</span></p></div>
+      <div class="card card-red"><h4>5. <span class="lang-zh">4-7-8 呼吸</span><span class="lang-en">4-7-8 Breathing</span></h4><p><span class="lang-zh">破壞癌細胞厭氧環境。</span><span class="lang-en">Destroys cancer's anaerobic environment.</span></p></div>
+      <div class="card card-red"><h4>6. <span class="lang-zh">免費資源</span><span class="lang-en">Free Resources</span></h4><p><span class="lang-zh">日光浴 + 接地氣。</span><span class="lang-en">Sunlight + barefoot grounding.</span></p></div>
+    </div>
+    <p style="margin-top:15px; font-size:0.85rem;"><span class="lang-zh">*第 7 點：極限薑黃動態劑量協議（請參閱</span><span class="lang-en">*Point 7: Dynamic Turmeric Protocol (See</span> <a href="#ch10" style="color:var(--brick);font-weight:bold;"><span class="lang-zh">CH_10 硬件補丁</span><span class="lang-en">CH_10 Patches</span></a>).</p>
+  </div>
+  <div class="ch-footer">PHASE 4: ADVANCED // TUMOR_SURVIVAL</div>
+</div>
+
+<!-- 🟠 階段五：行動與紀錄 -->
+
+<!-- CH_13: 24H 原型 -->
+<div class="ch" id="ch13">
+  <div class="ch-badge">CH_13</div>
+  <div class="ch-body">
+    <h2><span class="lang-zh">24H 原型驗證 — 今晚即刻開始</span><span class="lang-en">24H Prototype: Start Tonight</span></h2>
+    <div class="g2">
+      <div class="card card-slate">
+        <h4>STEP 1 — 20:00</h4>
+        <p><span class="lang-zh">物理性斷水 + <strong>溫水浸腳</strong>。準備進入 Danger Zone。開啟手機飛航模式睡覺。</span><span class="lang-en">Water cutoff + <strong>Warm foot soak</strong>. Enter Danger Zone. Airplane mode for sleep.</span></p>
+      </div>
+      <div class="card card-slate">
+        <h4>STEP 2 — 08:00</h4>
+        <p><span class="lang-zh">執行<strong>薑黃暖水 / 暖薑檸檬水</strong>。伸脷影相留檔對比。</span><span class="lang-en">Execute <strong>Turmeric/Lemon Ginger water</strong>. Take photo of tongue for comparison.</span></p>
+      </div>
+    </div>
+  </div>
+  <div class="ch-footer">PHASE 5: ACTION // INITIATE_NOW</div>
+</div>
+
+<!-- CH_14: 21日追蹤 -->
+<div class="ch" id="ch14">
+  <div class="ch-badge slate">CH_14</div>
+  <div class="ch-body">
+    <h2><span class="lang-zh">21日重啟追蹤器 (Tracker)</span><span class="lang-en">21-Day Tracker</span></h2>
+    <p style="font-size:.85rem;margin-bottom:10px"><span class="lang-zh">每日落嚟撳格仔打卡。一次破戒 = 整個星期白做。</span><span class="lang-en">Click daily to track. 1 cheat = 1 week wasted.</span></p>
+    <div class="tracker-grid" id="trackerGrid"></div>
+    <div class="prog-wrap"><div class="prog-bar" id="progBar"></div></div>
+    <div style="text-align:right; margin-top:5px; font-family:var(--mono); font-size:0.75rem; color:var(--slate);" id="progTxt">0/21 COMPLETED</div>
+  </div>
+  <div class="ch-footer">PHASE 5: ACTION // LOCAL_STORAGE_ACTIVE // EOF();</div>
+</div>
+
+<!-- DISCLAIMER & SLOGAN -->
+<div style="margin: 40px auto 20px; padding: 25px; background: var(--panel-bg); border: 2px solid var(--border-dark); border-radius: 6px; text-align: center;">
+  <p style="font-size: 0.95rem; color: var(--text-main); margin-bottom: 10px;">
+    <span class="lang-zh">⚠️ <strong>聲明：</strong>以上食材「這只是我本人食用方法」，只供參考。</span>
+    <span class="lang-en">⚠️ <strong>DISCLAIMER:</strong> The above ingredients "only my personal consumption method" and are for reference only.</span>
+  </p>
+  <h2 style="font-family: var(--mono); font-size: 2.2rem; color: var(--alert-red); margin: 15px 0 0; letter-spacing: 2px; border: none; font-weight: 900;">
+    DON'T JUST LIVE, OPTIMIZE.
+  </h2>
+</div>
+
+<div style="text-align:center;padding:10px 0 30px;font-family:var(--mono);font-size:.7rem;color:var(--slate)">
+  SYSTEM_ID: ANTI_INFLAM_SIGMA_2026 // V10.1 // BUILD: 2026.05 // GOOGLE SITES COMPATIBLE
+</div>
+
+</div><!-- /container -->
+
+<script>
+// ── THEME & LANG TOGGLE LOGIC ──
+const btnTheme = document.getElementById('themeToggle');
+const btnLang = document.getElementById('langToggle');
+
+if(localStorage.getItem('maga_theme') === 'dark') document.body.setAttribute('data-theme', 'dark');
+btnTheme.addEventListener('click', () => {
+  if(document.body.getAttribute('data-theme') === 'dark') {
+    document.body.removeAttribute('data-theme'); localStorage.setItem('maga_theme', 'light');
+  } else {
+    document.body.setAttribute('data-theme', 'dark'); localStorage.setItem('maga_theme', 'dark');
+  }
+});
+
+if(localStorage.getItem('maga_lang') === 'en') document.body.classList.add('en-mode');
+btnLang.addEventListener('click', () => {
+  document.body.classList.toggle('en-mode');
+  localStorage.setItem('maga_lang', document.body.classList.contains('en-mode') ? 'en' : 'zh');
+});
+
+// ── SHOPPING LIST LOGIC ──
+document.querySelectorAll('.check-item input[type="checkbox"]').forEach(box => {
+  const key = 'maga_shop_v10_1_' + box.value;
+  if(localStorage.getItem(key) === 'true') { box.checked = true; box.parentElement.classList.add('done'); }
+  box.addEventListener('change', function() {
+    localStorage.setItem(key, this.checked);
+    this.parentElement.classList.toggle('done', this.checked);
+  });
+});
+
+// ── 21-DAY TRACKER LOGIC ──
+const grid = document.getElementById('trackerGrid');
+const bar = document.getElementById('progBar');
+const txt = document.getElementById('progTxt');
+let state = JSON.parse(localStorage.getItem('maga_tracker_v10_1')) || Array(21).fill(false);
+
+function updateProg() {
+  const n = state.filter(Boolean).length;
+  bar.style.width = (n / 21 * 100) + '%';
+  txt.innerText = n + '/21 COMPLETED';
+  localStorage.setItem('maga_tracker_v10_1', JSON.stringify(state));
+}
+
+for(let i=0; i<21; i++) {
+  const d = document.createElement('div');
+  d.className = 'day-box' + (state[i] ? ' done' : '');
+  d.innerHTML = 'D' + (i+1);
+  d.addEventListener('click', () => {
+    state[i] = !state[i];
+    d.classList.toggle('done');
+    updateProg();
+  });
+  grid.appendChild(d);
+}
+updateProg();
+
+// ── GOOGLE SITES COMPATIBLE SCROLL NAV LOGIC ──
+const pills = document.querySelectorAll('.snav');
+const secs = document.querySelectorAll('.ch[id]');
+
+pills.forEach(link => {
+  link.addEventListener('click', function(e) {
+    e.preventDefault();
+    const targetId = this.getAttribute('href').substring(1);
+    const targetNode = document.getElementById(targetId);
+    if(targetNode) {
+       // Using JS scrollTo instead of hash change to bypass Google Sites iframe issues
+       const headerOffset = 150;
+       const elementPosition = targetNode.getBoundingClientRect().top;
+       const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+       window.scrollTo({
+            top: offsetPosition,
+            behavior: "smooth"
+       });
+    }
+  });
+});
+
+window.addEventListener('scroll', () => {
+  let cur = '';
+  secs.forEach(s => { if(window.scrollY >= s.offsetTop - 160) cur = s.id; });
+  pills.forEach(p => { 
+    p.classList.remove('on'); 
+    if(p.getAttribute('href') === '#' + cur) p.classList.add('on'); 
+  });
+});
+</script>
+</body>
+</html>
